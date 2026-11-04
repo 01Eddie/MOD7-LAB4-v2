@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: API de Cuentas Bancarias
+  version: "" # LAB: sustituir por 1.0.0
+  description: API educativa para consultar cuentas bancarias ficticias.
+  contact:
+    name: Equipo API
+    email: api@example.org
+servers:
+  - url: https://example.execute-api.us-east-1.amazonaws.com/test
+paths:
+  /clientes/{cliente-id}/cuentas:
+    get:
+      tags: [Cuentas]
+      summary: Consultar cuentas de un cliente
+      # LAB: descomentar operationId: listarCuentasCliente
+      parameters:
+        - name: cliente-id
+          in: path
+          required: true
+          description: Identificador público ficticio de cliente
+          schema:
+            type: string
+            pattern: '^CLI[0-9]{3}$'
+      responses:
+        '200':
+          description: Cuentas del cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsultaCuentas'
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problema'
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: never
+        responses:
+          default:
+            statusCode: '200'
+            responseTemplates:
+              application/json: |
+                {"origen":"MOCK","clienteId":"$util.escapeJavaScript($input.params('cliente-id'))","cuentas":[{"numeroCuenta":"1000000001","tipo":"AHORROS","moneda":"PEN","titular":"Cliente de prueba","saldo":100.0}]}
+components:
+  schemas:
+    Cuenta:
+      type: object
+      required: [numeroCuenta, tipo, moneda, titular, saldo]
+      properties:
+        numeroCuenta: {type: string, example: '1000000001'}
+        tipo: {type: string, enum: [AHORROS, CORRIENTE]}
+        moneda: {type: string, enum: [PEN, USD]}
+        titular: {type: string, example: 'Cliente de prueba'}
+        saldo: {type: number, minimum: 0, example: 100}
+    ConsultaCuentas:
+      type: object
+      required: [origen, clienteId, cuentas]
+      properties:
+        origen: {type: string, enum: [MOCK, LAMBDA]}
+        clienteId: {type: string}
+        cuentas:
+          type: array
+          items: {$ref: '#/components/schemas/Cuenta'}
+    Problema:
+      type: object
+      required: [title, status, detail]
+      properties:
+        title: {type: string}
+        status: {type: integer}
+        detail: {type: string}

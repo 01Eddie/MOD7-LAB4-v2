@@ -1,0 +1,35 @@
+name: 03 - Promover a PROD educativa
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mod7-aws-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: python -m pip install PyYAML==6.0.2
+      - name: Promover versión validada a API PROD independiente
+        env:
+          SUFFIX: ${{ vars.SUFFIX }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          CATALOG_BUCKET: ${{ vars.CATALOG_BUCKET }}
+        run: |
+          bash scripts/04-promote-prod.sh
+          bash scripts/06-smoke-test.sh prod
+      - name: Registrar producción en catálogo
+        env:
+          SUFFIX: ${{ vars.SUFFIX }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          CATALOG_BUCKET: ${{ vars.CATALOG_BUCKET }}
+          STATUS: PRODUCCION
+        run: bash scripts/05-update-catalog.sh

@@ -1,0 +1,49 @@
+name: 01 - Validar contrato y publicar MOCK
+on:
+  pull_request:
+    paths: ["contract/**"]
+  push:
+    branches: [main]
+    paths: ["contract/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mod7-aws-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Spectral
+        run: npm install -g @stoplight/spectral-cli@6.15.0
+      - name: Validar contrato
+        run: spectral lint contract/openapi.yaml --ruleset contract/.spectral.yml
+  mock:
+    if: github.event_name != 'pull_request'
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Dependencias para catálogo
+        run: python -m pip install PyYAML==6.0.2
+      - name: Desplegar MOCK
+        env:
+          SUFFIX: ${{ vars.SUFFIX }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          CATALOG_BUCKET: ${{ vars.CATALOG_BUCKET }}
+        run: bash scripts/01-deploy-mock.sh && bash scripts/06-smoke-test.sh mock
+      - name: Publicar estado MOCK
+        env:
+          SUFFIX: ${{ vars.SUFFIX }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          CATALOG_BUCKET: ${{ vars.CATALOG_BUCKET }}
+          STATUS: MOCK
+        run: bash scripts/05-update-catalog.sh

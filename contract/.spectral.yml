@@ -1,0 +1,16 @@
+extends: ["spectral:oas"]
+rules:
+  version-required:
+    description: info.version debe tener valor
+    severity: error
+    given: $.info
+    then:
+      field: version
+      function: truthy
+  operation-id-required:
+    description: Toda operación debe incluir operationId
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete]
+    then:
+      field: operationId
+      function: truthy

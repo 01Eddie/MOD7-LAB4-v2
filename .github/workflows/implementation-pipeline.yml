@@ -1,0 +1,53 @@
+name: 02 - Validar implementación y desplegar TEST
+on:
+  pull_request:
+    paths: ["implementation/**"]
+  push:
+    branches: [main]
+    paths: ["implementation/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mod7-aws-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pruebas unitarias de Lambda
+        run: node --test implementation/tests/*.test.mjs
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: python -m pip install PyYAML==6.0.2
+      - name: Desplegar Lambda y conectar API TEST
+        env:
+          SUFFIX: ${{ vars.SUFFIX }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          CATALOG_BUCKET: ${{ vars.CATALOG_BUCKET }}
+          LAMBDA_ROLE_ARN: ${{ vars.LAMBDA_ROLE_ARN }}
+        run: |
+          bash scripts/02-deploy-lambda-test.sh
+          bash scripts/03-update-api-integration.sh
+          bash scripts/06-smoke-test.sh test
+      - name: Actualizar catálogo
+        env:
+          SUFFIX: ${{ vars.SUFFIX }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          CATALOG_BUCKET: ${{ vars.CATALOG_BUCKET }}
+          STATUS: IMPLEMENTADO
+        run: bash scripts/05-update-catalog.sh
