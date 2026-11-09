@@ -94,7 +94,7 @@ paths:
             statusCode: '201'
             responseTemplates:
               application/json: |
-                {"numeroCuenta":"SIMULADO-0001","tipo":"AHORROS","moneda":"PEN","titular":"Cliente (Mock)","saldo":0}           
+                {"numeroCuenta":"SIMULADO-0001","tipo":"AHORROS","moneda":"PEN","titular":"Cliente (Mock)","saldo":0}
 components:
   schemas:
     Cuenta:
