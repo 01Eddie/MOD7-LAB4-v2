@@ -1,5 +1,5 @@
 // Datos totalmente ficticios. NO persiste cuentas. Modificar ENABLE_POST para el propuesto.
-export const ENABLE_POST = true;
+export const ENABLE_POST = false;
 const clientes = {
   CLI001: [{ numeroCuenta: '1000000001', tipo: 'AHORROS', moneda: 'PEN', titular: 'Cliente de prueba EHG.', saldo: 100.0 }],
   CLI002: [{ numeroCuenta: '1000000002', tipo: 'CORRIENTE', moneda: 'USD', titular: 'Otro cliente de EHG.', saldo: 200.0 }]
