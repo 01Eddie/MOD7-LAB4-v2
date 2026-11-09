@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: API de Cuentas Bancarias
   version: "1.0.0" # LAB: sustituir por 1.0.0
-  description: API educativa para consultar cuentas bancarias ficticias ehg.
+  description: API educativa para consultar cuentas bancarias ficticias ehg
   contact:
     name: Equipo API
     email: api@example.org
